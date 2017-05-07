@@ -215,3 +215,29 @@ class Engine:
                 self.raft = True
                 return True
             return False
+        return False
+
+    def visualize(self):
+        r, c = 0, 0
+        for i in range(-2,3):
+            for j in range(-2,3):
+                if self.dirn == self.drct['N']:
+                    r = self.cur_row + i
+                    c = self.cur_col + j
+                elif self.dirn == self.drct['S']:
+                    r = self.cur_row - i
+                    c = self.cur_col - j
+                elif self.dirn == self.drct['E']:
+                    r = self.cur_row + i
+                    c = self.cur_col - j
+                elif self.dirn == self.drct['W']:
+                    r = self.cur_row - i
+                    c = self.cur_col + j
+                if r in range(0, self.nrow+1) and c in range(0, len(self.map[r])):
+                    self.view[2+i][2+j] = map[r][c]
+                else:
+                    self.view[2+i][2+j] = '.'
+
+    def print_usage(self):
+        self.prompt('Usage: python Raft [-p <port>] -i map [-m <maxmoves>] [-s]')
+
