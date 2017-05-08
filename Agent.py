@@ -11,8 +11,9 @@ actions = {'left': 'L', 'right': 'R', 'forward': 'F', 'chop': 'C', 'blast': 'B',
 direction = {'N': 0, 'E': 1, 'S': 2, 'W': 3}
 
 class Agent:
-    def get_action(self):
-        pass
+    def get_action(self, view):
+        action = ''
+        return action
 
     def get_view(self, data):
         view = [[' ']*5 for _ in range(5)]
@@ -217,6 +218,26 @@ class Engine:
             return False
         return False
 
+    def print_world(self):
+        ch = ' '
+        print()
+        for i in range(self.nrow+1):
+            for j in range(len(self.map[i])):
+                if i == self.cur_row and j == self.cur_col:
+                    if self.dirn == self.drct['N']:
+                        ch = '^'
+                    elif self.dirn == self.drct['E']:
+                        ch = '>'
+                    elif self.dirn == self.drct['S']:
+                        ch = 'v'
+                    elif self.dirn == self.drct['W']:
+                        ch = '<'
+                else:
+                    ch = self.map[i][j]
+                print(ch, end='')
+            print()
+        print()
+
     def visualize(self):
         r, c = 0, 0
         for i in range(-2,3):
@@ -240,4 +261,31 @@ class Engine:
 
     def print_usage(self):
         self.prompt('Usage: python Raft [-p <port>] -i map [-m <maxmoves>] [-s]')
+
+    def main(self, args):
+        engine = Engine()
+        silent = False
+        mapName = ''
+        action = 'F'
+        maxmoves = 10000
+        port = 0
+        engine.read_world(mapName)
+        engine.print_world()
+        if port:
+            pass
+        else:
+            agent = Agent()
+            for i in range(maxmoves):
+                engine.visualize()
+                action = agent.get_action(engine.view)
+                engine.apply(action)
+                if not silent:
+                    engine.print_world()
+                if engine.won:
+                    engine.prompt(f'Game won in {i} moves.')
+                elif engine.lost:
+                    engine.prompt('Game lost.')
+            engine.prompt(f'Exceeded maximum of {maxmoves} moves.')
+
+
 
