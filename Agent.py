@@ -1,14 +1,6 @@
-import socket
+from socket import *
 import sys, getopt
 
-PORT = 31234 # By default
-opts, args = getopt.getopt(sys.argv[1:], "p:")
-for opt, port_value in opts:
-    if opt == "-p":
-        PORT = int(port_value)
-        break
-actions = {'left': 'L', 'right': 'R', 'forward': 'F', 'chop': 'C', 'blast': 'B', 'unlock': 'U'}
-direction = {'N': 0, 'E': 1, 'S': 2, 'W': 3}
 
 class Agent:
     def get_action(self, view):
@@ -254,37 +246,86 @@ class Engine:
                     r = self.cur_row - i
                     c = self.cur_col + j
                 if r in range(0, self.nrow+1) and c in range(0, len(self.map[r])):
-                    self.view[2+i][2+j] = map[r][c]
+                    self.view[2+i][2+j] = self.map[r][c]
                 else:
                     self.view[2+i][2+j] = '.'
 
     def print_usage(self):
         self.prompt('Usage: python Raft [-p <port>] -i map [-m <maxmoves>] [-s]')
 
-    def main(self, args):
-        engine = Engine()
-        silent = False
-        mapName = ''
+    def main(self, argv=None):
+        if argv is None:
+            argv = sys.argv
+        actions = self.actions
+        direction = self.drct
         action = 'F'
-        maxmoves = 10000
-        port = 0
-        engine.read_world(mapName)
-        engine.print_world()
+        port = 0  # By default
+        host = 'localhost'
+        usage = 'Usage: python Raft [-p <port>] -i map [-m <maxmoves>] [-s]'
+        map_name = ''
+        max_moves = 10000
+        silent = False
+        try:
+            opts, args = getopt.getopt(sys.argv[1:], "p:i:m:sh", ["help"])
+        except getopt.GetoptError as err:
+            print(err)
+            self.prompt(usage)
+        for o, a in opts:
+            if o == "-p":
+                port = int(a)
+            elif o in ("-h", "--help"):
+                print(usage)
+                sys.exit()
+            elif o == "-i":
+                map_name = a
+            elif o == "-m":
+                max_moves = int(a)
+            elif o == "-s":
+                silent = True
+            else:
+                self.prompt("Unhandled Option, see usage: "+usage)
+        self.read_world(map_name)
+        self.print_world()
         if port:
-            pass
+            addr = (host, port)
+            try:
+                srvr_sock = socket(AF_INET, SOCK_STREAM)
+                srvr_sock.bind(addr)
+                srvr_sock.listen(5)
+                (clt_sock, address) = srvr_sock.accept()
+                srvr_sock.close()
+            except IOError :
+                self.prompt("Could not listen on port: " + port)
+            try:
+                for m in range(max_moves):
+                    self.visualize()
+                    for i in range(5):
+                        for j in range(5):
+                            if not (i == 2 and j ==2):
+                                srvr_sock.send(self.map[i][j].encode("UTF-8"))
+            except IOError :
+                self.prompt("Lost connection to port: " + port)
+            finally:
+                try:
+                    clt_sock.close()
+                except IOError:
+                    self.prompt("Failed to close client socket")
         else:
             agent = Agent()
-            for i in range(maxmoves):
-                engine.visualize()
-                action = agent.get_action(engine.view)
-                engine.apply(action)
+            for i in range(max_moves):
+                self.visualize()
+                action = agent.get_action(self.view)
+                self.apply(action)
                 if not silent:
-                    engine.print_world()
-                if engine.won:
-                    engine.prompt(f'Game won in {i} moves.')
-                elif engine.lost:
-                    engine.prompt('Game lost.')
-            engine.prompt(f'Exceeded maximum of {maxmoves} moves.')
+                    self.print_world()
+                if self.won:
+                    self.prompt(f'Game won in {i} moves.')
+                elif self.lost:
+                    self.prompt('Game lost.')
+            self.prompt(f'Exceeded maximum of {max_moves} moves.')
 
+if __name__ =='__main__':
+    engine = Engine()
+    engine.main()
 
 
