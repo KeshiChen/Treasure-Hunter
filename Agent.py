@@ -9,13 +9,13 @@ class Agent:
 
     def get_view(self, data):
         view = [[' ']*5 for _ in range(5)]
-        #k = 0
+        n = 0
         for i in range(5):
             for j in range(5):
                 if not i == 2 and j == 2:
                     try:
-                        view[i][j] = data[i][j]
-                        #k += 1
+                        view[i][j] = data[n]
+                        n += 1
                     except IndexError:
                         pass
         return view
