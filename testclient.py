@@ -9,6 +9,7 @@ host = "localhost" # 获取本地主机名
 port = 12345                # 设置端口好
 view = [[None] * 5 for _ in range(5)]
 s.connect((host, port))
+dirn = 2
 def get_view(data):
         view = [[' ']*5 for _ in range(5)]
         n = 0
@@ -44,9 +45,10 @@ while True:
     elif rec == 'exc':
         print("Exceeded max moves.")
         exit()
+    elif rec == '0' or rec == '1' or rec == '2' or rec == '3':
+        dirn = int(rec)
     else:
         view = get_view(rec)
         print_view(view)
     i = input("action = ")
     s.send(i.encode("UTF-8"))
-    #print_view(get_view(s.recv(24, MSG_WAITALL).decode("UTF-8")))

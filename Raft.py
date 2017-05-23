@@ -305,6 +305,7 @@ class Engine:
                         for j in range(5):
                             if not (i == 2 and j ==2):
                                 clt_sock.send(self.view[i][j].encode("UTF-8"))
+                    clt_sock.send(str(self.dirn).encode("UTF-8"))
                     action = clt_sock.recv(1).decode("UTF-8")
                     if not silent:
                         print("action =", action)
