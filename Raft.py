@@ -240,11 +240,11 @@ class Engine:
                     r = self.cur_row - i
                     c = self.cur_col - j
                 elif self.dirn == self.drct['E']:
-                    r = self.cur_row + i
-                    c = self.cur_col - j
+                    r = self.cur_row + j
+                    c = self.cur_col - i
                 elif self.dirn == self.drct['W']:
-                    r = self.cur_row - i
-                    c = self.cur_col + j
+                    r = self.cur_row - j
+                    c = self.cur_col + i
                 if r in range(self.nrow) and c in range(len(self.map[r])):
                     self.view[2+i][2+j] = self.map[r][c]
                 else:
