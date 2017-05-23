@@ -1,7 +1,7 @@
 from socket import *
 import sys, getopt
 
-
+# python pycharmprojects\Treasurehunter\raft.py -p 12345 -i pycharmprojects\treasurehunter\s0.in
 class Agent:
     def get_action(self, view):
         action = ''
@@ -39,7 +39,7 @@ class Agent:
 class Engine:
     def __init__(self):
         self.map = [] # Map of the world
-        self.view = [] # View of agent
+        self.view = [[None] * 5 for _ in range(5)] # View of agent
         self.axe = False
         self.key = False
         self.dynamite = 0 # Dynamite holding number
@@ -76,7 +76,7 @@ class Engine:
                     if len(line):
                         if len(line)>self.column:
                             raise IOError
-                        self.nrow+=1
+                        self.nrow += 1
                         if self.nrow > self.row:
                             raise IOError
                         self.map.append([line[c] for c in range(len(line))])
@@ -130,7 +130,7 @@ class Engine:
         return True
 
     def forward(self, new_row, new_col):
-        if (new_row < 0 or new_row > self.nrow) or (new_col < 0 or new_col >= len(self.map[self.nrow])):
+        if (new_row < 0 or new_row > self.nrow-1) or (new_col < 0 or new_col >= len(self.map[self.nrow-1])):
             if not self.offMap:
                 self.map[self.cur_row][self.cur_col] = self.tile_type['water']
                 self.offMap = True
@@ -202,7 +202,7 @@ class Engine:
                 return True
             return False
         elif action == self.actions['blast']:
-            if self.dynamite and (self.map[new_row][new_col] == self.tile_type['tree'] ):
+            if self.dynamite and (self.map[new_row][new_col] == self.tile_type['tree'] or self.map[new_row][new_col] == self.tile_type['wall']):
                 self.map[new_row][new_col] = self.tile_type['land']
                 self.raft = True
                 return True
@@ -212,7 +212,7 @@ class Engine:
     def print_world(self):
         ch = ' '
         print()
-        for i in range(self.nrow+1):
+        for i in range(self.nrow):
             for j in range(len(self.map[i])):
                 if i == self.cur_row and j == self.cur_col:
                     if self.dirn == self.drct['N']:
@@ -245,7 +245,7 @@ class Engine:
                 elif self.dirn == self.drct['W']:
                     r = self.cur_row - i
                     c = self.cur_col + j
-                if r in range(0, self.nrow+1) and c in range(0, len(self.map[r])):
+                if r in range(self.nrow) and c in range(len(self.map[r])):
                     self.view[2+i][2+j] = self.map[r][c]
                 else:
                     self.view[2+i][2+j] = '.'
@@ -273,6 +273,7 @@ class Engine:
         for o, a in opts:
             if o == "-p":
                 port = int(a)
+                print(port)
             elif o in ("-h", "--help"):
                 print(usage)
                 sys.exit()
@@ -291,22 +292,35 @@ class Engine:
             try:
                 srvr_sock = socket(AF_INET, SOCK_STREAM)
                 srvr_sock.bind(addr)
-                srvr_sock.listen(5)
+                srvr_sock.listen(10)
                 (clt_sock, address) = srvr_sock.accept()
-                srvr_sock.close()
+                #srvr_sock.shutdown(SHUT_RD)
+                #srvr_sock.close()
             except IOError :
-                self.prompt("Could not listen on port: " + port)
+                self.prompt(f"Could not listen on port: {port}")
             try:
                 for m in range(max_moves):
                     self.visualize()
                     for i in range(5):
                         for j in range(5):
                             if not (i == 2 and j ==2):
-                                srvr_sock.send(self.map[i][j].encode("UTF-8"))
-            except IOError :
-                self.prompt("Lost connection to port: " + port)
+                                clt_sock.send(self.view[i][j].encode("UTF-8"))
+                    action = clt_sock.recv(1).decode("UTF-8")
+                    if not silent:
+                        print("action =", action)
+                    self.apply(action)
+                    if not silent:
+                        self.print_world()
+                    if self.won:
+                        self.prompt(F"Game Won in {m} moves.")
+                    elif self.lost:
+                        self.prompt("Game lost.")
+                self.prompt(f"Exceeded maximum of {max_moves} moves.\n")
+            #except IOError :
+            #    self.prompt(f"Lost connection to port: {port}")
             finally:
                 try:
+                    srvr_sock.close()
                     clt_sock.close()
                 except IOError:
                     self.prompt("Failed to close client socket")
