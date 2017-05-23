@@ -10,14 +10,12 @@ port = 12345                # 设置端口好
 view = [[None] * 5 for _ in range(5)]
 s.connect((host, port))
 def get_view(data):
-        print(data,end=',')
         view = [[' ']*5 for _ in range(5)]
         n = 0
         for i in range(5):
             for j in range(5):
                 if not (i == 2 and j == 2):
                     try:
-                        print(data[n], end=';')
                         view[i][j] = data[n]
                         n += 1
                     except IndexError:
@@ -35,9 +33,20 @@ def print_view(view):
                 print(view[i][j],end='')
         print('|')
     print('+-----+')
-#print(s.recv(24,MSG_WAITALL).decode())
-#s.close()
 while True:
-    print_view(get_view(s.recv(24, MSG_WAITALL).decode("UTF-8")))
+    rec = s.recv(24, MSG_WAITALL).decode("UTF-8")
+    if rec == 'won':
+        print("Game won.")
+        exit()
+    elif rec == 'lost':
+        print("Game lost.")
+        exit()
+    elif rec == 'exc':
+        print("Exceeded max moves.")
+        exit()
+    else:
+        view = get_view(rec)
+        print_view(view)
     i = input("action = ")
     s.send(i.encode("UTF-8"))
+    #print_view(get_view(s.recv(24, MSG_WAITALL).decode("UTF-8")))

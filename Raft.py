@@ -312,9 +312,12 @@ class Engine:
                     if not silent:
                         self.print_world()
                     if self.won:
+                        clt_sock.send("won".encode("UTF-8"))
                         self.prompt(F"Game Won in {m} moves.")
                     elif self.lost:
+                        clt_sock.send("lost".encode("UTF-8"))
                         self.prompt("Game lost.")
+                clt_sock.send("exc".encode("UTF-8"))
                 self.prompt(f"Exceeded maximum of {max_moves} moves.\n")
             #except IOError :
             #    self.prompt(f"Lost connection to port: {port}")
