@@ -1,40 +1,8 @@
 from socket import *
+from Agent import *
 import sys, getopt
 
 # python pycharmprojects\Treasurehunter\raft.py -p 12345 -i pycharmprojects\treasurehunter\s0.in
-class Agent:
-    def get_action(self, view):
-        action = ''
-        return action
-
-    def get_view(self, data):
-        view = [[' ']*5 for _ in range(5)]
-        n = 0
-        for i in range(5):
-            for j in range(5):
-                if not i == 2 and j == 2:
-                    try:
-                        view[i][j] = data[n]
-                        n += 1
-                    except IndexError:
-                        pass
-        return view
-
-    def print_view(self, view):
-        print('\n+-----+')
-        for i in range(5):
-            print('|',end='')
-            for j in range(5):
-                if i == 2 and j == 2:
-                    print('^',end='')
-                else:
-                    print(view[i][j],end='')
-            print('|')
-        print('+-----+')
-
-    def main(self):
-        pass
-
 
 class Engine:
     def __init__(self):
@@ -299,13 +267,17 @@ class Engine:
             except IOError :
                 self.prompt(f"Could not listen on port: {port}")
             try:
+                print(self.irow, self.icol, self.dirn)
+                clt_sock.send(str(self.irow).encode("UTF-8"))
+                clt_sock.send(str(self.icol).encode("UTF-8"))
+                clt_sock.send(str(self.dirn).encode("UTF-8"))
                 for m in range(max_moves):
                     self.visualize()
                     for i in range(5):
                         for j in range(5):
                             if not (i == 2 and j ==2):
                                 clt_sock.send(self.view[i][j].encode("UTF-8"))
-                    clt_sock.send(str(self.dirn).encode("UTF-8"))
+                    #clt_sock.send(str(self.dirn).encode("UTF-8"))
                     action = clt_sock.recv(1).decode("UTF-8")
                     if not silent:
                         print("action =", action)
@@ -313,12 +285,12 @@ class Engine:
                     if not silent:
                         self.print_world()
                     if self.won:
-                        clt_sock.send("won".encode("UTF-8"))
+#                        clt_sock.send("won".encode("UTF-8"))
                         self.prompt(F"Game Won in {m} moves.")
                     elif self.lost:
-                        clt_sock.send("lost".encode("UTF-8"))
+#                        clt_sock.send("lost".encode("UTF-8"))
                         self.prompt("Game lost.")
-                clt_sock.send("exc".encode("UTF-8"))
+#                clt_sock.send("exc".encode("UTF-8"))
                 self.prompt(f"Exceeded maximum of {max_moves} moves.\n")
             #except IOError :
             #    self.prompt(f"Lost connection to port: {port}")
